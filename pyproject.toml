@@ -1,0 +1,27 @@
+[project]
+name = "warmbox"
+version = "0.1.0"
+description = "A coding agent that reuses prefill KV instead of recomputing it, inside a sandboxed workspace."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+fast = ["blake3>=0.4"]
+
+[project.scripts]
+warmbox = "warmbox.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["warmbox*", "bench*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

@@ -1,0 +1,9 @@
+.warmbox/
+bench/.cache/
+bench/out/
+bench/tasks/custom/*.json
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/

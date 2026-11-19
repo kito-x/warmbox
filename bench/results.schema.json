@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://warmbox.local/results.schema.json",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "environment", "runs", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "environment": {
+      "type": "object",
+      "required": ["python", "platform", "hash_algo", "block_size", "backend", "model", "simulated_kv"],
+      "properties": {
+        "python": {"type": "string"}, "platform": {"type": "string"},
+        "hash_algo": {"enum": ["blake3-128", "blake2b-128"]},
+        "block_size": {"const": 128}, "backend": {"enum": ["mock", "openai"]},
+        "model": {"type": "string"}, "simulated_kv": {"type": "boolean"},
+        "prices_per_mtok": {"type": "object",
+          "properties": {"input": {"type": "number"}, "cached": {"type": "number"}, "output": {"type": "number"}}}
+      }
+    },
+    "runs": {"type": "array", "items": {"$ref": "#/$defs/run"}},
+    "summary": {"type": "object", "additionalProperties": {"$ref": "#/$defs/baselineSummary"},
+                "propertyNames": {"enum": ["A", "B", "C"]}}
+  },
+  "$defs": {
+    "turn": {
+      "type": "object",
+      "required": ["turn", "prefill_tokens", "reused_tokens", "l2_reused_tokens", "recompute_tokens",
+                   "hit_blocks", "miss_blocks", "output_tokens", "ttft_ms", "ttft_simulated", "usd",
+                   "edited_paths", "edit_recompute_tokens", "tool_calls"],
+      "properties": {
+        "turn": {"type": "integer", "minimum": 1},
+        "prefill_tokens": {"type": "integer", "minimum": 0},
+        "reused_tokens": {"type": "integer", "minimum": 0},
+        "l2_reused_tokens": {"type": "integer", "minimum": 0},
+        "recompute_tokens": {"type": "integer", "minimum": 0},
+        "hit_blocks": {"type": "integer", "minimum": 0},
+        "miss_blocks": {"type": "integer", "minimum": 0},
+        "output_tokens": {"type": "integer", "minimum": 0},
+        "ttft_ms": {"type": "number", "minimum": 0},
+        "ttft_simulated": {"type": "boolean"},
+        "server_cached_tokens": {"type": ["integer", "null"]},
+        "usd": {"type": "number", "minimum": 0},
+        "edited_paths": {"type": "array", "items": {"type": "string"}},
+        "edit_recompute_tokens": {"type": "integer", "minimum": 0},
+        "tool_calls": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["agent_id", "role", "finished", "passed", "turns"],
+      "properties": {
+        "agent_id": {"type": "string"}, "role": {"type": "string"},
+        "finished": {"type": "boolean"}, "passed": {"type": ["boolean", "null"]},
+        "turns": {"type": "array", "items": {"$ref": "#/$defs/turn"}}
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["run_id", "baseline", "run_index", "task_id", "suite", "n_agents", "wall_ms", "agents", "task_metrics"],
+      "properties": {
+        "run_id": {"type": "string", "pattern": "^[ABC]-r[0-9]+-.+$"},
+        "baseline": {"enum": ["A", "B", "C"]},
+        "run_index": {"type": "integer", "minimum": 0},
+        "task_id": {"type": "string"},
+        "suite": {"enum": ["custom", "swe"]},
+        "n_agents": {"type": "integer", "minimum": 1},
+        "wall_ms": {"type": "number", "minimum": 0},
+        "agents": {"type": "array", "items": {"$ref": "#/$defs/agent"}, "minItems": 1},
+        "task_metrics": {"$ref": "#/$defs/taskMetrics"}
+      }
+    },
+    "taskMetrics": {
+      "type": "object",
+      "required": ["prefill_tokens", "reused_tokens", "recompute_tokens", "usd", "passed"],
+      "properties": {
+        "prefill_tokens": {"type": "integer"}, "reused_tokens": {"type": "integer"},
+        "recompute_tokens": {"type": "integer"}, "usd": {"type": "number"},
+        "passed": {"type": ["boolean", "null"]}
+      }
+    },
+    "baselineSummary": {
+      "type": "object",
+      "required": ["n_tasks", "n_runs", "n_turns", "prefix_hit_rate", "prefix_hit_rate_repeat",
+                   "prefill_saved_pct", "prefill_saved_pct_repeat", "shared_reuse_pct",
+                   "ttft_p50_ms", "ttft_p95_ms", "usd_per_task", "pass_at_1",
+                   "edit_recompute_ratio_p50", "followers_turn1_reuse"],
+      "properties": {
+        "n_tasks": {"type": "integer"}, "n_runs": {"type": "integer"}, "n_turns": {"type": "integer"},
+        "prefix_hit_rate": {"type": "number"}, "prefix_hit_rate_repeat": {"type": "number"},
+        "prefill_saved_pct": {"type": "number"}, "prefill_saved_pct_repeat": {"type": "number"},
+        "shared_reuse_pct": {"type": "number"},
+        "ttft_p50_ms": {"type": "number"}, "ttft_p95_ms": {"type": "number"},
+        "usd_per_task": {"type": "number"},
+        "pass_at_1": {"type": ["number", "null"]},
+        "edit_recompute_ratio_p50": {"type": ["number", "null"]},
+        "followers_turn1_reuse": {"type": ["number", "null"]},
+        "determinism_ok": {"type": ["boolean", "null"]}
+      }
+    }
+  }
+}
